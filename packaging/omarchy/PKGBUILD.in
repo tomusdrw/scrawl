@@ -53,6 +53,6 @@ package() {
   install -Dm644 packaging/omarchy/scrawl.desktop "$pkgdir/usr/share/applications/scrawl.desktop"
   install -Dm644 assets/app-icon.png "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/scrawl.png"
   install -Dm644 packaging/omarchy/omarchy.lua "$pkgdir/usr/share/doc/scrawl/omarchy.lua"
-  install -Dm644 docs/linux.md "$pkgdir/usr/share/doc/scrawl/README.md"
+  install -Dm644 packaging/omarchy/README.md "$pkgdir/usr/share/doc/scrawl/README.md"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/scrawl/LICENSE"
 }

@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 INPUTS = (
     "Cargo.toml", "Cargo.lock", "build.rs", "LICENSE", "src",
     "assets/app-icon.png", "helper/linux.py", "helper/test_linux.py",
-    "tests/linux_smoke.py", "docs/linux.md", "packaging/omarchy",
+    "tests/linux_smoke.py", "packaging/omarchy",
 )
 
 

@@ -9,7 +9,6 @@ on:
       - 'tests/**'
       - 'packaging/omarchy/**'
       - 'scripts/build-omarchy-package.py'
-      - 'docs/linux.md'
       - 'assets/app-icon.png'
       - 'Cargo.*'
       - 'build.rs'
