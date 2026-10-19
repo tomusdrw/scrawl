@@ -4,7 +4,7 @@ Show an agent a problem instead of describing it.
 
 Press a shortcut (`⌥⇧S`) and Scrawl starts recording the screen. Talk, click around, draw on it, and press `⌥⇧S` again to finish. Scrawl records the screen, your voice, and your marks, then packs them into a compact bundle: a contact sheet of annotated keyframes (`contact-sheet.png`), individual full-resolution keyframes (`frames/frame-XX.png`), a time-aligned transcript and interaction timeline (`summary.md`), and a structured manifest (`scrawl.json`).
 
-**Linux / Hyprland:** A native Linux backend provides screen, fixed-window and area recording, microphone audio, explicit Draw mode, and local `.scrawl` bundles. Install with `./scripts/install-linux.sh`, run `scrawl doctor`, and see the [Linux setup and controls](docs/linux.md) for dependencies, Alt+Shift+S bindings, optional local Whisper transcription, and platform limits. The macOS-specific controls and integrations below do not apply to Linux.
+**Omarchy / Hyprland:** The Linux backend provides screen, fixed-window and area recording, microphone audio, explicit Draw mode, and local `.scrawl` bundles. Build and install the native pacman package using the [Omarchy setup guide](docs/linux.md), which covers shortcuts, optional GPU-accelerated Whisper transcription, and platform limits. The macOS-specific controls and integrations below do not apply to Linux.
 
 ## Usage
 

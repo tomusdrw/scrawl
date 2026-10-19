@@ -1,0 +1,55 @@
+name: Omarchy package
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'helper/linux.py'
+      - 'helper/test_linux.py'
+      - 'tests/**'
+      - 'packaging/omarchy/**'
+      - 'scripts/build-omarchy-package.py'
+      - 'docs/linux.md'
+      - 'assets/app-icon.png'
+      - 'Cargo.*'
+      - 'build.rs'
+      - '.github/workflows/omarchy-package.yml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Prepare Arch build tools
+        run: |
+          pacman -Syu --noconfirm --needed git python
+          useradd --create-home builder
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install declared package dependencies
+        run: |
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- python scripts/build-omarchy-package.py --prepare-only
+          mapfile -t dependencies < <(awk '$1 ~ /^(depends|makedepends|checkdepends)$/ { print $3 }' dist/omarchy/.SRCINFO)
+          pacman -S --noconfirm --needed -- "${dependencies[@]}"
+      - name: Build and test package
+        run: |
+          runuser -u builder -- python tests/omarchy_builder.py -v
+          runuser -u builder -- python scripts/build-omarchy-package.py
+          runuser -u builder -- bash -c 'PYTHONDONTWRITEBYTECODE=1 python tests/omarchy_package.py dist/omarchy/scrawl-*.pkg.tar.zst -v'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: scrawl-omarchy-x86_64
+          path: dist/omarchy/scrawl-*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 14
