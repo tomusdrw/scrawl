@@ -11,6 +11,11 @@ pub fn default_captures_dir() -> PathBuf {
     std::env::var_os("SCRAWL_CAPTURES_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
+            #[cfg(target_os = "linux")]
+            return dirs::data_local_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join("scrawl/captures");
+            #[cfg(not(target_os = "linux"))]
             dirs::home_dir()
                 .unwrap_or_else(|| PathBuf::from("."))
                 .join("Library/Application Support/scrawl/captures")
@@ -182,7 +187,35 @@ pub fn paste_bundle_image_and_text(bundle_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "linux")]
+pub fn copy_string_to_clipboard(content: &str) -> Result<()> {
+    use std::io::Write;
+    use std::process::Stdio;
+    let mut child = Command::new("wl-copy")
+        .args(["--type", "text/plain;charset=utf-8"])
+        .stdin(Stdio::piped())
+        .spawn()
+        .context("Could not start wl-copy; install wl-clipboard")?;
+    let written = child.stdin.take().context("wl-copy stdin unavailable")?
+        .write_all(content.as_bytes());
+    if let Err(error) = written {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error.into());
+    }
+    ensure!(child.wait()?.success(), "wl-copy failed; check your Wayland session");
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub fn copy_bundle_to_clipboard(bundle_dir: &Path) -> Result<()> {
+    let (directory, bundle) = load_bundle(bundle_dir)?;
+    let summary = fs::read_to_string(directory.join("summary.md"))
+        .unwrap_or_else(|_| crate::sketch::summary_markdown(&bundle, &directory));
+    copy_string_to_clipboard(&summary)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
 pub fn copy_bundle_to_clipboard(_bundle_dir: &Path) -> Result<()> {
     bail!("Image and text clipboard handoff requires macOS")
 }
@@ -330,6 +363,11 @@ pub fn default_config_path() -> PathBuf {
     std::env::var_os("SCRAWL_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
+            #[cfg(target_os = "linux")]
+            return dirs::config_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join("scrawl/config.json");
+            #[cfg(not(target_os = "linux"))]
             dirs::home_dir()
                 .unwrap_or_else(|| PathBuf::from("."))
                 .join(".config/scrawl/config.json")
@@ -601,7 +639,7 @@ pub fn sync_bundle_to(host: &str, bundle_dir: &Path) -> Result<()> {
         );
         // Held until the media lands, so the iPhone video isn't re-encoded or cleaned up under
         // the copy (see `retention`).
-        let sending = bundle_dir.join(crate::retention::MEDIA_SENDING);
+        let sending = bundle_dir.join(".media-sending");
         let _ = fs::write(&sending, host);
         std::thread::spawn(move || {
             let _done = RemoveOnDrop(sending);
