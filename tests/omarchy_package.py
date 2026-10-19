@@ -4,6 +4,7 @@
 Run: python3 tests/omarchy_package.py dist/omarchy/scrawl-*.pkg.tar.zst
 The lifecycle test uses fakeroot and a temporary pacman root/database.
 """
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -18,12 +19,15 @@ class PackageTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="scrawl-pacman-")
         self.root = Path(self.temp.name)
+        self.env = dict(os.environ, SCRAWL_RUNTIME_DIR=str(self.root / "runtime"))
 
     def tearDown(self):
         self.temp.cleanup()
 
     def run_command(self, *args):
-        return subprocess.run(args, check=True, text=True, capture_output=True, timeout=30)
+        result = subprocess.run(args, env=self.env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, f"{args}:\n{result.stdout}\n{result.stderr}")
+        return result
 
     def test_declared_runtime_and_optional_gpu_dependencies(self):
         metadata = self.run_command("bsdtar", "-xOf", str(PACKAGE), ".PKGINFO").stdout
