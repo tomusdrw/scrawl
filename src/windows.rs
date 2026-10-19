@@ -6,9 +6,13 @@
 //! list changes), cursor samples are deduped by movement, and window titles stay in
 //! `scrawl.json`: they never go into `summary.md` or the clipboard.
 
+#[cfg(target_os = "macos")]
 use std::collections::HashMap;
+#[cfg(target_os = "macos")]
 use std::sync::Arc;
+#[cfg(target_os = "macos")]
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(target_os = "macos")]
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
@@ -17,10 +21,13 @@ use serde::{Deserialize, Serialize};
 use crate::model::TargetFrame;
 
 /// How often the worker wakes to sample the cursor and check its triggers.
+#[cfg(target_os = "macos")]
 const TICK: Duration = Duration::from_millis(66);
 /// Snapshots while the cursor moves are at most this often (about 2 Hz).
+#[cfg(target_os = "macos")]
 const MOVING_INTERVAL: Duration = Duration::from_millis(500);
 /// A snapshot even when nothing seems to happen, to catch windows opening without input.
+#[cfg(target_os = "macos")]
 const IDLE_INTERVAL: Duration = Duration::from_millis(2_000);
 /// Cursor samples closer than this to the previous one (in capture points) are dropped.
 const CURSOR_MIN_MOVE_PT: f64 = 2.0;
@@ -288,6 +295,7 @@ pub fn raw_windows() -> Vec<RawWindow> {
     out
 }
 
+#[cfg(target_os = "macos")]
 fn app_meta_of(pid: i32) -> AppMeta {
     use objc2_app_kit::{NSApplicationActivationPolicy, NSRunningApplication};
     match NSRunningApplication::runningApplicationWithProcessIdentifier(pid) {
@@ -305,6 +313,7 @@ fn app_meta_of(pid: i32) -> AppMeta {
 /// The strip the Dock reserves on the display at `frame` (global top-left points), from the
 /// difference between the screen's frame and visible frame. `None` when the Dock hides or off
 /// the main thread (`NSScreen` is main-thread only).
+#[cfg(target_os = "macos")]
 pub fn dock_rect(frame: TargetFrame) -> Option<[f64; 4]> {
     use objc2::MainThreadMarker;
     use objc2_app_kit::NSScreen;
@@ -344,6 +353,7 @@ pub fn dock_rect(frame: TargetFrame) -> Option<[f64; 4]> {
 }
 
 /// One timed snapshot of the windows overlapping `frame`.
+#[cfg(target_os = "macos")]
 pub fn snapshot(
     frame: TargetFrame,
     dock: Option<[f64; 4]>,
@@ -368,11 +378,13 @@ pub fn snapshot(
 /// Snapshots are taken at the start, right after `request` is raised (click, ink or laser
 /// start), when the frontmost app changes, at most every 500 ms while the cursor moves, every
 /// 2 s otherwise, and once more at the end. Cursor samples are taken at 15 Hz.
+#[cfg(target_os = "macos")]
 pub struct WindowLogger {
     stopping: Arc<AtomicBool>,
     worker: Option<JoinHandle<ActivityLog>>,
 }
 
+#[cfg(target_os = "macos")]
 impl WindowLogger {
     /// Call on the main thread, so the Dock's strip can be read from `NSScreen`.
     pub fn start(frame: TargetFrame, started_at: Instant, request: Arc<AtomicBool>) -> Self {
@@ -409,6 +421,7 @@ impl WindowLogger {
     }
 }
 
+#[cfg(target_os = "macos")]
 impl Drop for WindowLogger {
     fn drop(&mut self) {
         self.stopping.store(true, Ordering::Release);
@@ -418,6 +431,7 @@ impl Drop for WindowLogger {
     }
 }
 
+#[cfg(target_os = "macos")]
 fn run(
     frame: TargetFrame,
     dock: Option<[f64; 4]>,
@@ -546,6 +560,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_os = "macos")]
     #[test]
     fn logger_snapshots_at_start_and_right_after_a_request() {
         let request = Arc::new(AtomicBool::new(false));

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Scrawl
+Comment=Record your screen, voice, and drawings
+Exec=/usr/bin/scrawl app
+TryExec=/usr/bin/scrawl
+Icon=scrawl
+Terminal=false
+Categories=AudioVideo;Recorder;
+Keywords=Screen;Recording;Drawing;Voice;
+StartupNotify=false
